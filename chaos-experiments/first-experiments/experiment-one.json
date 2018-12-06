@@ -1,0 +1,47 @@
+{
+  "version": "1.0.0",
+  "title": "Chaostest",
+  "description": "Lerne das Chaosframework",
+  "contributions": {
+    "reliability": "high",
+    "availability": "high"
+  },
+  "steady-state-hypothesis": {
+    "title": "Kubernetes muss da sein",
+    "probes": [
+      {
+        "name": "all-our-microservices-should-be-healthy",
+        "type":"probe",
+        "provider": {
+          "type": "python",
+          "module": "chaosk8s.probes",
+          "func": "microservice_available_and_healthy",
+          "arguments": {
+            "name": "minilkube",
+            "ns": "default"
+          }
+        }
+      }
+    ]
+  },
+  "method": [
+    {
+      "type": "action",
+      "name": "terminate-pod",
+      "provider": {
+        "type": "python",
+        "module": "chaosk8s.pod.actions",
+        "func": "terminate_pods",
+        "arguments": {
+          "label_selector": "app=hello-minikube",
+          "name_pattern": "hello-minikube-[a-z0-9]$",
+          "rand": true,
+          "ns": "default"
+        }
+      },
+      "pauses": {
+        "after": 5
+      }
+    }
+  ]
+}

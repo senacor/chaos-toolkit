@@ -1,0 +1,59 @@
+{
+  "version": "1.0.0",
+  "title": "Terminate the database master should not prevent application from running",
+  "description": "something",
+  "tags": [
+    "kubernetes",
+    "postgresql",
+    "cloudnative",
+    "database"
+  ],
+  "steady-state-hypothesis": {
+    "title": "Services are all available and healthy",
+    "probes": [
+      {
+        "type": "probe",
+        "name": "application-must-respond",
+        "tolerance": 200,
+        "provider": {
+          "type": "http",
+          "verify_tls": false,
+          "url": "http://192.168.99.101:32043/"
+        }
+      }
+    ]
+  },
+  "method": [
+    {
+      "provider": {
+        "func": "count_pods",
+        "type": "python",
+        "module": "chaosk8s.pod.probes",
+        "arguments": {
+          "label_selector": "run=hello-minikube"
+        }
+      },
+      "type": "probe",
+      "name": "count-pods"
+    },
+    {
+      "type": "action",
+      "name": "terminate-db-master",
+      "provider": {
+        "type": "python",
+        "module": "chaosk8s.pod.actions",
+        "func": "terminate_pods",
+        "arguments": {
+          "label_selector": "run=hello-minikube",
+          "rand": true,
+          "ns": "default"
+        }
+      }
+    },
+    {
+      "type": "probe",
+      "ref": "application-must-respond"
+    }
+  ],
+  "rollbacks": []
+}
