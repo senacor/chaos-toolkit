@@ -1,0 +1,64 @@
+{
+  "version": "1.0.0",
+  "title": "Chaos in Spring Boot verursachen",
+  "description": "something",
+  "tags": [
+    "spring-boot"
+  ],
+  "steady-state-hypothesis": {
+    "title": "Spring Boot Applikation ist verfügbar",
+    "probes": [
+      {
+        "type": "probe",
+        "name": "application-must-respond",
+        "tolerance": 200,
+        "provider": {
+          "type": "http",
+          "timeout": 3000,
+          "verify_tls": false,
+          "url": "http://localhost:8080/test"
+        }
+      }
+    ]
+  },
+  "method": [
+    {
+      "type": "action",
+      "name": "enable_chaosmonkey",
+      "provider": {
+        "arguments": {
+          "base_url": "http://localhost:8080/actuator"
+        },
+        "func": "enable_chaosmonkey",
+        "module": "chaosspring.actions",
+        "type": "python"
+      }
+    },
+    {
+      "name": "configure_assaults",
+      "provider": {
+        "arguments": {
+          "base_url": "http://localhost:8080/actuator",
+          "assaults_configuration": {
+            "level": 5,
+            "latencyRangeStart": 5000,
+            "latencyRangeEnd": 10000,
+            "latencyActive": true,
+            "exceptionsActive": false,
+            "killApplicationActive": false,
+            "restartApplicationActive": true
+          }
+        },
+        "func": "change_assaults_configuration",
+        "module": "chaosspring.actions",
+        "type": "python"
+      },
+      "type": "action"
+    },
+    {
+      "type": "probe",
+      "ref": "application-must-respond"
+    }
+  ],
+  "rollbacks": []
+}
